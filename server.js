@@ -96,6 +96,13 @@ const quizzes = [
   }
 ];
 
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+
 app.get('/api/quiz/questions', (req, res) => {
   res.json(quizzes);
 });
