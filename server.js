@@ -96,55 +96,77 @@ const quizzes = [
   }
 ];
 
-app.use(express.static(path.join(__dirname, 'public')));
+let users = {};
+let stats = quizzes.map(() => ({}));
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-
-app.get('/api/quiz/questions', (req, res) => {
-  res.json(quizzes);
+app.post('/start', (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== 'string') {
+    return res.status(400).json({ error: 'Name is required' });
+  }
+  res.json({ totalQuestions: quizzes.length });
 });
 
-
-let users = {};
-let stats = quizzes.map(() => ({}));
-
-
-app.get('/api/quiz/questions', (req, res) => {
-  const questions = quizzes.map(q => ({
-    id: q.id,
-    question: q.question,
-    choices: q.choices
-  }));
-  res.json(questions);
+app.get('/quiz/:index', (req, res) => {
+  const index = parseInt(req.params.index);
+  if (isNaN(index) || index < 0 || index >= quizzes.length) {
+    return res.status(404).json({ error: 'Question not found' });
+  }
+  const { id, question, choices } = quizzes[index];
+  res.json({ id, question, choices });
 });
 
-app.post('/api/quiz/submit', (req, res) => {
-  const { userName, answers } = req.body;
-
-  if (!userName || !Array.isArray(answers)) {
-    return res.status(400).json({ error: 'Invalid input' });
+app.post('/answer', (req, res) => {
+  const { name, questionIndex, answerIndex } = req.body;
+  if (!name || typeof questionIndex !== 'number' || typeof answerIndex !== 'number') {
+    return res.status(400).json({ error: 'Invalid data' });
   }
 
-  users[userName] = answers;
+  if (!users[name]) {
+    users[name] = Array(quizzes.length).fill(null);
+  }
 
-  answers.forEach((answerIndex, questionIndex) => {
-    if (typeof answerIndex === 'number') {
-      stats[questionIndex][answerIndex] = (stats[questionIndex][answerIndex] || 0) + 1;
+  users[name][questionIndex] = answerIndex;
+
+  if (!stats[questionIndex][answerIndex]) {
+    stats[questionIndex][answerIndex] = 0;
+  }
+  stats[questionIndex][answerIndex]++;
+
+  res.json({ message: 'Answer recorded' });
+});
+
+app.get('/results/:name', (req, res) => {
+  const name = req.params.name;
+  const answers = users[name];
+
+  if (!answers) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const yourAnswers = quizzes.map((q, i) => ({
+    question: q.question,
+    selectedAnswer: answers[i] !== null ? q.choices[answers[i]] : null
+  }));
+
+  const mostChosenPerQuestion = quizzes.map((q, i) => {
+    const countMap = stats[i];
+    let max = -1;
+    let mostSelected = null;
+    for (const index in countMap) {
+      if (countMap[index] > max) {
+        max = countMap[index];
+        mostSelected = q.choices[index];
+      }
     }
+    return { mostSelectedAnswer: mostSelected };
   });
 
-  const score = answers.reduce((acc, curr, i) => {
-    return curr === quizzes[i].answer ? acc + 1 : acc;
-  }, 0);
-
-  res.json({
-    message: 'Quiz submitted',
-    user: userName,
-    score
-  });
+  res.json({ yourAnswers, mostChosenPerQuestion });
 });
 
 app.listen(port, () => {

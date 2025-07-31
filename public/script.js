@@ -17,20 +17,26 @@ async function startQuiz() {
   }
 
   try {
-    const res = await fetch('/start', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: userName })
-    });
+  const res = await fetch('/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: userName })
+  });
 
-    const data = await res.json();
-    userAnswers = Array(data.totalQuestions).fill(null);
-    currentQuestionIndex = 0;
-    quizSubmitted = false;
-    await fetchQuestion(currentQuestionIndex);
-  } catch (err) {
-    quizContainer.innerHTML = `<div class="error">Failed to start quiz: ${err.message}</div>`;
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Server error: ${res.status} - ${text}`);
   }
+
+  const data = await res.json();
+  userAnswers = Array(data.totalQuestions).fill(null);
+  currentQuestionIndex = 0;
+  quizSubmitted = false;
+  await fetchQuestion(currentQuestionIndex);
+} catch (err) {
+  quizContainer.innerHTML = `<div class="error">Failed to start quiz: ${err.message}</div>`;
+}
+
 }
 
 async function fetchQuestion(index) {
