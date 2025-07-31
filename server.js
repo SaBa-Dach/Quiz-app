@@ -74,17 +74,14 @@ const quizzes = [
   {
     id: 7,
     question: "Which HTML tag is used to create a hyperlink?",
-    choices: ["<a>", "<link>", "<url>", "<href>"],
+    choices: ["a", "link", "url", "href"],
     answer: 0
   },
   {
     id: 8,
     question: "What is the function of the <form> tag in HTML?",
     choices: [
-      "To structure articles",
-      "To embed media",
-      "To create input forms",
-      "To format text"
+      "To structure articles", "To embed media", "To create input forms", "To format text"
     ],
     answer: 2
   },

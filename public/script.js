@@ -163,7 +163,7 @@ function showFinalResults(result) {
     `).join('')}
   `;
 
-  statsContainer.style.display = 'block';
+  statsContainer.style.display = 'none';
   document.getElementById('restartBtn').addEventListener('click', () => location.reload());
 }
 

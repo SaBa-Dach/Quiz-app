@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="ka">
+<head>
+  <meta charset="UTF-8">
+  <title>ტესტის ანალიზი</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f7f7f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    canvas {
+      display: block;
+      margin: 30px auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ტესტის სტატისტიკა</h1>
+    <p id="average"></p>
+    <p id="mode"></p>
+    <p id="mostIncorrect"></p>
+    <p id="mostCorrect"></p>
+    <canvas id="choiceChart" width="400" height="400"></canvas>
+  </div>  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <script>
+    // 1. საშუალო ქულის გამოთვლა
+    function calculateAverage(scores) {
+      if (!scores.length) return 0;
+      return scores.reduce((a, b) => a + b, 0) / scores.length;
+    }
+
+    // 2. მოდა
+    function findMode(arr) {
+      const freq = {};
+      arr.forEach(num => freq[num] = (freq[num] || 0) + 1);
+      let mode = arr[0], maxCount = 0;
+      for (let num in freq) {
+        if (freq[num] > maxCount) {
+          maxCount = freq[num];
+          mode = Number(num);
+        }
+      }
+      return mode;
+    }
+
+    // 3. ყველაზე არასწორად პასუხი
+    function mostIncorrectlyAnswered(questions) {
+      return questions.reduce((max, q) => q.incorrect > max.incorrect ? q : max);
+    }
+
+    // 4. ყველაზე სწორად პასუხი
+    function mostCorrectlyAnswered(questions) {
+      return questions.reduce((max, q) => q.correct > max.correct ? q : max);
+    }
+
+    // 5. არჩევანის განაწილება
+    function choiceDistribution(answers,optionsCount){
+        const distribution = Array (optionsCount).fill(0);
+        answers.forEach(choice =>{
+            if(choice >= 0 && choice <optionsCount)
+        {
+            distribution[choice]++;
+        }
+        });
+        return distribution;
+    }
+      // მაგალითები
+      const scores = [9,9,7,10,8,9];
+      const answers = [0,1,1,2,0,1,2,2,2];
+      const questions = [
+        {id:1, correct:5,incorrect: 3},
+        {id:2, correct: 1, incorrect: 7},
+        {id:3, correct: 6, incorrect:2}
+      ];
+      // შედეგების ჩვენება
+       document.getElementById("average").textContent = "საშუალო ქულა:"+
+       calculateAverage(scores).toFixed(2);
+       document.getElementById("mode").textContent = "ყველაზე ხშირი ქულა (მოდა):" + findMode(scores);
+       document.getElementById("mostIncorrect").textContent = "ყველაზე მეტი არასწორ პასუხიანი კითხვა : ID="+
+       mostCorrectlyAnswered(questions).id;
+       document.getElementById("mostCorrect").textContent = "ყველაზე მეტი სწორ პასუხიანი კითხვა: ID="+ mostCorrectlyAnswered(questions).id;
+       // Pie Chart
+       const ctx = document.getElementById('choiceChart').getContext('2d');
+       const dist = choiceDistribution(answers,4);
+        
+
+       new Chart(ctx,{
+        type:'pie',
+        data:{
+            labels:['A','B','C'],
+            datasets: [{
+            albel:'პასუხების განაწილება',
+            data:dist,
+            backgroundColor:['#FF6384', '#36A2EB','#FFCE56'],
+            borderWidth:1
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    position:'bottom'
+                }
+            }
+        }
+       })
+       </script></body>
+       </html>
