@@ -1,4 +1,10 @@
-const quizData = [
+const quizContainer = document.getElementById('quiz-container');
+const getStatsBtn = document.getElementById('getStatsBtn');
+const statsContainer = document.getElementById('stats-container');
+let currentQuestionIndex = 0;
+let userAnswers = Array(quizData.length).fill(null);
+let quizSubmitted = false;
+let quizData = [
   {
     id: 0,
     question: "What does HTML stand for?",
@@ -7,7 +13,8 @@ const quizData = [
       "Hyper Transfer Markup Language",
       "Home Tool Markup Language",
       "Hyper Trainer Marking Language"
-    ]
+    ],
+    answer: 0 // Correct answer index
   },
   {
     id: 1,
@@ -17,17 +24,20 @@ const quizData = [
       "To style web pages",
       "To handle databases",
       "To generate HTML"
-    ]
+    ],
+    answer: 1 // Correct answer index
   },
   {
     id: 2,
     question: "Which language is primarily used to add interactivity to a webpage?",
-    choices: ["Java", "Python", "JavaScript", "PHP"]
+    choices: ["Java", "Python", "JavaScript", "PHP"],
+    answer: 2
   },
   {
     id: 3,
     question: "Which of the following is a JavaScript framework?",
-    choices: ["Laravel", "Django", "React", "Flask"]
+    choices: ["Laravel", "Django", "React", "Flask"],
+    answer: 2
   },
   {
     id: 4,
@@ -37,12 +47,14 @@ const quizData = [
       "To style a website",
       "To track changes in code",
       "To host videos"
-    ]
+    ],
+    answer: 2
   },
   {
     id: 5,
     question: "Which of these is a backend technology?",
-    choices: ["Node.js", "HTML", "CSS", "Bootstrap"]
+    choices: ["Node.js", "HTML", "CSS", "Bootstrap"],
+    answer: 0
   },
   {
     id: 6,
@@ -52,12 +64,14 @@ const quizData = [
       "$45,000 - $65,000",
       "$65,000 - $85,000",
       "$100,000+"
-    ]
+    ],
+    answer: 1
   },
   {
     id: 7,
     question: "Which HTML tag is used to create a hyperlink?",
-    choices: ["<a>", "<link>", "<url>", "<href>"]
+    choices: ["<a>", "<link>", "<url>", "<href>"],
+    answer: 0
   },
   {
     id: 8,
@@ -67,49 +81,27 @@ const quizData = [
       "To embed media",
       "To create input forms",
       "To format text"
-    ]
+    ],
+    answer: 2
   },
   {
     id: 9,
     question: "Which company developed the React library?",
-    choices: ["Google", "Facebook", "Microsoft", "Apple"]
+    choices: ["Google", "Facebook", "Microsoft", "Apple"],
+    answer: 1
   }
 ];
 
-async function loadQuiz() {
-  try {
-    const response = await fetch('/api/quiz/questions');
-    if (!response.ok) throw new Error('Failed to load quiz');
-    quizData = await response.json();
-    renderCurrentQuestion();
-  } catch (error) {
-    quizContainer.innerHTML = `
-      <div class="error">
-        Failed to load quiz: ${error.message}
-        <button onclick="loadQuiz()">Retry</button>
-      </div>
-    `;
-  }
-}
-
-//loadQuiz();
-const quizContainer = document.getElementById('quiz-container');
-const getStatsBtn = document.getElementById('getStatsBtn');
-const statsContainer = document.getElementById('stats-container');
-
-
-let currentQuestionIndex = 0;
-let userAnswers = Array(quizData.length).fill(null);
-let quizSubmitted = false;
-
+// Function to render the current question
 function renderCurrentQuestion() {
-    if (currentQuestionIndex >= quizData.length) {
-        showFinalResults();
-        return;
-    }
-    const question = quizData[currentQuestionIndex];
-      
-    quizContainer.innerHTML = `
+  if (currentQuestionIndex >= quizData.length) {
+    showFinalResults();
+    return;
+  }
+
+  const question = quizData[currentQuestionIndex];
+  
+  quizContainer.innerHTML = `
     <div class="question">
         <div class="progress">Question ${currentQuestionIndex + 1} of ${quizData.length}</div>
         <h3>${question.question}</h3>
@@ -138,38 +130,43 @@ function renderCurrentQuestion() {
         </div>
       `;
 
-      if (currentQuestionIndex > 0) {
-        document.getElementById('prevBtn').addEventListener('click', () => {
-          saveCurrentAnswer();
-          currentQuestionIndex--;
-          renderCurrentQuestion();
-        });
-      }
+  // Event listener for "Previous" button
+  if (currentQuestionIndex > 0) {
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      saveCurrentAnswer();
+      currentQuestionIndex--;
+      renderCurrentQuestion();
+    });
+  }
 
-      if (currentQuestionIndex < quizData.length - 1) {
-        document.getElementById('nextBtn').addEventListener('click', () => {
-          saveCurrentAnswer();
-          currentQuestionIndex++;
-          renderCurrentQuestion();
-        });
-      } else {
-        document.getElementById('submitBtn').addEventListener('click', submitQuiz);
-      }
+  // Event listener for "Next" button
+  if (currentQuestionIndex < quizData.length - 1) {
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      saveCurrentAnswer();
+      currentQuestionIndex++;
+      renderCurrentQuestion();
+    });
+  } else {
+    document.getElementById('submitBtn').addEventListener('click', submitQuiz);
+  }
 
-      document.querySelectorAll(`input[name="question-${question.id}"]`).forEach(radio => {
-        radio.addEventListener('change', (e) => {
-          userAnswers[currentQuestionIndex] = parseInt(e.target.value);
-        });
-      });
-    }
+  // Handle radio button change
+  document.querySelectorAll(`input[name="question-${question.id}"]`).forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      userAnswers[currentQuestionIndex] = parseInt(e.target.value);
+    });
+  });
+}
 
-    function saveCurrentAnswer() {
-      const selectedOption = document.querySelector(`input[name="question-${quizData[currentQuestionIndex].id}"]:checked`);
-      if (selectedOption) {
-        userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
-      }
-    }
+// Save the selected answer
+function saveCurrentAnswer() {
+  const selectedOption = document.querySelector(`input[name="question-${quizData[currentQuestionIndex].id}"]:checked`);
+  if (selectedOption) {
+    userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
+  }
+}
 
+// Submit the quiz
 async function submitQuiz() {
   saveCurrentAnswer();
   quizSubmitted = true;
@@ -203,49 +200,60 @@ async function submitQuiz() {
   }
 }
 
-    function showFinalResults() {
-      let score = 0;
-      const results = [];
-      
-      quizData.forEach((question, index) => {
-        const isCorrect = userAnswers[index] === question.answer;
-        if (isCorrect) score++;
-        
-        results.push({
-          question: question.question,
-          correct: isCorrect,
-          userAnswer: userAnswers[index] !== null ? question.choices[userAnswers[index]] : "Not answered",
-          correctAnswer: question.choices[question.answer]
-        });
-      });
-      
-      quizContainer.innerHTML = `
-        <div class="question">
-          <h2>Quiz Completed!</h2>
-          <p>Your score: ${score} out of ${quizData.length}</p>
-          <button id="restartBtn">Restart Quiz</button>
-        </div>
-      `;
-      
-      statsContainer.innerHTML = `
-        <h2>Detailed Results</h2>
-        <div class="results">
-          ${results.map((result, i) => `
-            <div class="result-item ${result.correct ? 'correct' : 'incorrect'}">
-              <p><strong>Question ${i + 1}:</strong> ${result.question}</p>
-              <p><strong>Your answer:</strong> ${result.userAnswer}</p>
-              ${!result.correct ? `<p><strong>Correct answer:</strong> ${result.correctAnswer}</p>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      `;
-      
-      document.getElementById('restartBtn').addEventListener('click', restartQuiz);
-      statsContainer.style.display = 'block';
-    }
+// Display final results
+function showFinalResults() {
+  let score = 0;
+  const results = [];
 
-    getStatsBtn.addEventListener('click', () => {
-      statsContainer.style.display = statsContainer.style.display === 'none' ? 'block' : 'none';
+  quizData.forEach((question, index) => {
+    const isCorrect = userAnswers[index] === question.answer;
+    if (isCorrect) score++;
+
+    results.push({
+      question: question.question,
+      correct: isCorrect,
+      userAnswer: userAnswers[index] !== null ? question.choices[userAnswers[index]] : "Not answered",
+      correctAnswer: question.choices[question.answer]
     });
+  });
 
+  quizContainer.innerHTML = `
+    <div class="question">
+      <h2>Quiz Completed!</h2>
+      <p>Your score: ${score} out of ${quizData.length}</p>
+      <button id="restartBtn">Restart Quiz</button>
+    </div>
+  `;
+
+  statsContainer.innerHTML = `
+    <h2>Detailed Results</h2>
+    <div class="results">
+      ${results.map((result, i) => `
+        <div class="result-item ${result.correct ? 'correct' : 'incorrect'}">
+          <p><strong>Question ${i + 1}:</strong> ${result.question}</p>
+          <p><strong>Your answer:</strong> ${result.userAnswer}</p>
+          ${!result.correct ? `<p><strong>Correct answer:</strong> ${result.correctAnswer}</p>` : ''}
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  document.getElementById('restartBtn').addEventListener('click', restartQuiz);
+  statsContainer.style.display = 'block';
+}
+
+// Toggle stats container visibility
+getStatsBtn.addEventListener('click', () => {
+  statsContainer.style.display = statsContainer.style.display === 'none' ? 'block' : 'none';
+});
+
+// Restart the quiz
+function restartQuiz() {
+  currentQuestionIndex = 0;
+  userAnswers = Array(quizData.length).fill(null);
+  quizSubmitted = false;
+  renderCurrentQuestion();
+}
+
+// Initialize quiz
 renderCurrentQuestion();

@@ -7,6 +7,19 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+ // Serve HTML files
+  if (method === 'GET' && (pathname === '/' || pathname === '/index.html' || pathname === '/cars.html')) {
+    const filename = pathname === '/' ? 'index.html' : pathname.slice(1);
+    fs.readFile(path.join(__dirname, filename), (err, data) => {
+      if (err) {
+        res.writeHead(404); res.end('Not Found');
+      } else {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(data);
+      }
+    });
+  }
+  
 const quizzes = [
   {
     id: 0,
